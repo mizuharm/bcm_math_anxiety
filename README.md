@@ -15,6 +15,9 @@ Run Monte Carlo simulations of BCM over range of both epsilon and gamma paramete
 
 ## Auxiliary files (needed for any of the scripts above)
 BC_model_steps.m -> timestep BCM
+
 f_interaction -> interaction function for peer interactions
+
 groups_matrix -> creates adjacency matrix for randomly formed groups
+
 groups_matrix_ordered -> creates adjacency matrix for homogeneously formed groups
