@@ -19,8 +19,9 @@
 
 function anxiety_model_time_series()
 
-clf
-figure(1)
+close('all')
+
+figure(1) %for adjacency matrix
 
     %%%%%%%%%%%%%%%%%%%%
     %% Parameters and initialization 
@@ -65,10 +66,6 @@ figure(1)
     %number of groups
     m = floor(S/studs);
 
-    %Switch groups?
-    switch_groups = false; %set true to switch groups periodically
-    whenToSwitchGroups = 10; %how many timesteps before switching groups
-
     %Adjacency matrix for group interactions
 
         %If forming groups randomly:
@@ -78,7 +75,9 @@ figure(1)
             %xVec = sort(xVec);
             %A = groups_matrix_ordered(S,m); %groups formed homogeneously by anxiety
 
-
+    %Switch groups?
+    switch_groups = false; %set true to switch groups periodically
+    whenToSwitchGroups = 10; %how many timesteps before switching groups
 
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -92,7 +91,8 @@ figure(1)
         [xSoln(:,i),changeInTimeStep] = BC_model_steps(A,xVec,epsilon,gam); %Update one time step
         xVec = xSoln(:,i); %update xVec to new anxiety levels
         if switch_groups 
-             if mod(i,whenToSwitchGroups)==0 %every few timesteps make new groups
+             changeInTimeStep = 1; %do not end early for equilibria
+             if mod(i,whenToSwitchGroups)==0 %make new groups
                    A=groups_matrix(S,m);
              end
         end
@@ -116,38 +116,6 @@ figure(1)
     end 
 
     end_anxiety_Av = mean(xSoln(:,end));
+    disp('Average end anxiety:')
     disp(end_anxiety_Av)
-
-end
-
- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
- %% Interaction function, f
- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
- function xMat = f_interaction(xVec,epsilon,gam)
-    %input: xVec of current anxieties
-    %output: matrix, f_{ij} = f(x_i,x_j) for i \neq j
-    %                f_{ii} = xVec   
-
-    xMat = repmat(xVec,[1,length(xVec)]); %S x S matrix
-    xMat = (abs(xMat-xMat')<=epsilon).*(gam*xMat)+...
-        (xMat-xMat'>epsilon).*((1-gam)+gam*xMat); %no abs here because only high anxiety goes up
-    xMat = xMat - diag(diag(xMat)) + diag(xVec);
- end
-
-
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Bounded confidence timestep function
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-function [newxVec,changeInTimeStep] = BC_model_steps(A,xVec,epsilon,gam)
-    %input: xVec of current anxieties
-    %output: vector of new anxieties
-
-    interactionMat = A.*f_interaction(xVec,epsilon,gam);
-    num_interactions = sum(interactionMat>0,2); %number of non-zero interactions
-    newxVec = sum(interactionMat,2)./num_interactions;
-    changeInTimeStep = sum(abs(xVec - newxVec));
 end
